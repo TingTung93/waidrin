@@ -23,6 +23,75 @@ export interface Backend {
   isAbortError(error: unknown): boolean;
 }
 
+export interface ModelInfo {
+  id: string;
+  name?: string;
+  description?: string;
+  pricing?: {
+    prompt?: string;
+    completion?: string;
+  };
+  isFree?: boolean;
+}
+
+export async function fetchAvailableModels(apiUrl: string, apiKey?: string): Promise<ModelInfo[]> {
+  try {
+    console.log("Fetching models from:", apiUrl, "with API key:", apiKey ? "provided" : "not provided");
+    
+    const client = new OpenAI({
+      baseURL: `${apiUrl}/v1/`,
+      apiKey: apiKey || "",
+      dangerouslyAllowBrowser: true,
+    });
+
+    console.log("Making request to:", `${apiUrl}/v1/models`);
+    const response = await client.models.list();
+    console.log("Raw models response:", response);
+    
+    let models = response.data.map(model => {
+      // Check if this is an OpenRouter response with additional metadata
+      const modelData = model as any;
+      const isFree = modelData.pricing?.prompt === '0' || modelData.pricing?.completion === '0' || 
+                    modelData.id.includes('free') || modelData.context_length === undefined;
+      
+      return {
+        id: model.id,
+        name: modelData.name || model.id,
+        description: modelData.description || model.id,
+        pricing: modelData.pricing,
+        isFree,
+      };
+    });
+    
+    // Sort models: free first, then by name
+    models.sort((a, b) => {
+      if (a.isFree !== b.isFree) {
+        return a.isFree ? -1 : 1; // Free models first
+      }
+      return a.name?.localeCompare(b.name || '') || 0;
+    });
+    
+    console.log("Parsed and sorted models:", models);
+    return models;
+  } catch (error) {
+    console.error("Failed to fetch models:", error);
+    
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    
+    // Try to handle common OpenRouter response issues
+    if (error instanceof Error && error.message.includes('JSON')) {
+      console.error("JSON parsing failed. The API might be returning a non-JSON response.");
+      console.error("This often happens when there's an authentication or rate limiting issue.");
+    }
+    
+    return [];
+  }
+}
+
 class DefaultBackend implements Backend {
   controller = new AbortController();
 
@@ -31,15 +100,15 @@ class DefaultBackend implements Backend {
       const state = getState();
 
       const client = new OpenAI({
-        baseURL: state.apiUrl,
-        apiKey: state.apiKey,
+        baseURL: `${state.apiUrl}/v1/`,
+        apiKey: state.apiKey || "",
         dangerouslyAllowBrowser: true,
       });
 
       const stream = await client.chat.completions.create(
         {
           stream: true,
-          model: state.model,
+          model: state.model || "",
           messages: [
             { role: "system", content: prompt.system },
             { role: "user", content: prompt.user },

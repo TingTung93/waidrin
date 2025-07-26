@@ -25,9 +25,14 @@ export type CharacterIntroductionEvent = z.infer<typeof schemas.CharacterIntrodu
 export type LocationChangeEvent = z.infer<typeof schemas.LocationChangeEvent>;
 export type Event = z.infer<typeof schemas.Event>;
 export type State = z.infer<typeof schemas.State>;
+// Enhanced roleplay types
+export type Genre = z.infer<typeof schemas.Genre>;
+export type TavernCardV2 = z.infer<typeof schemas.TavernCardV2>;
+export type CharacterBook = z.infer<typeof schemas.CharacterBook>;
+export type ScenarioTemplate = z.infer<typeof schemas.ScenarioTemplate>;
 
 export const initialState: State = schemas.State.parse({
-  apiUrl: "http://localhost:8080/v1/",
+  apiUrl: "http://localhost:8080",
   apiKey: "",
   model: "",
   generationParams: {
@@ -64,6 +69,16 @@ export const initialState: State = schemas.State.parse({
   violentContentLevel: "regular",
   events: [],
   actions: [],
+  // Enhanced roleplay features
+  selectedGenre: "fantasy",
+  customGenre: undefined,
+  scenarioTemplate: undefined,
+  importedCharacters: [],
+  customRaces: [],
+  customLocationTypes: [],
+  enableCharacterBooks: false,
+  enableAlternateGreetings: false,
+  multiCharacterMode: false,
 });
 
 export type Plugin = Partial<{

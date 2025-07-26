@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2025  Philipp Emanuel Weidmann <pew@worldwidemann.com>
 
-import { Box, Flex, Heading, RadioCards, Switch, Text, TextArea, TextField } from "@radix-ui/themes";
+import { Box, Flex, Heading, RadioCards, Switch, Text, TextArea, TextField, Button, Card } from "@radix-ui/themes";
 import { Label } from "radix-ui";
 import { GiBullHorns, GiDrippingBlade } from "react-icons/gi";
+import { PlusIcon, MagicWandIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
 import { useShallow } from "zustand/shallow";
 import WizardStep from "@/components/WizardStep";
-import { type SexualContentLevel, useStateStore, type ViolentContentLevel } from "@/lib/state";
+import TemplateSelector from "@/components/TemplateSelector";
+import { type SexualContentLevel, useStateStore, type ViolentContentLevel, type ScenarioTemplate } from "@/lib/state";
+import { TemplateApplicator } from "@/lib/scenario-templates";
 
 export default function ScenarioSetup({ onNext, onBack }: { onNext?: () => void; onBack?: () => void }) {
   const { state, setState } = useStateStore(
@@ -16,8 +20,105 @@ export default function ScenarioSetup({ onNext, onBack }: { onNext?: () => void;
     })),
   );
 
+  const [showTemplateSelector, setShowTemplateSelector] = useState(!state.scenarioTemplate);
+  const [selectedTemplate, setSelectedTemplate] = useState<ScenarioTemplate | undefined>(state.scenarioTemplate);
+
+  const handleTemplateSelect = (template: ScenarioTemplate) => {
+    const templateData = TemplateApplicator.applyTemplate(template);
+    
+    setState((state) => {
+      // Apply template data to state
+      state.scenarioTemplate = template;
+      state.world.name = state.world.name === "[name]" ? `${template.name} World` : state.world.name;
+      state.world.description = state.world.description === "[description]" ? 
+        TemplateApplicator.generateWorldDescription(template) : state.world.description;
+      
+      // Apply content level defaults
+      state.sexualContentLevel = templateData.defaultContentLevels.sexual;
+      state.violentContentLevel = templateData.defaultContentLevels.violent;
+      
+      // Add custom races and location types if provided
+      if (templateData.customRaces) {
+        state.customRaces = [...new Set([...(state.customRaces || []), ...templateData.customRaces])];
+      }
+      if (templateData.locationTypes) {
+        state.customLocationTypes = [...new Set([...(state.customLocationTypes || []), ...templateData.locationTypes])];
+      }
+    });
+    
+    setSelectedTemplate(template);
+    setShowTemplateSelector(false);
+  };
+
+  const handleCreateCustom = () => {
+    setShowTemplateSelector(false);
+  };
+
+  const handleUseTemplate = () => {
+    setShowTemplateSelector(true);
+  };
+
+  if (showTemplateSelector) {
+    return (
+      <WizardStep title="Choose Scenario Template" onNext={onNext} onBack={onBack}>
+        <Box mb="6">
+          <Text size="4" color="gray">
+            Start with a pre-built template or create your own custom scenario from scratch.
+          </Text>
+        </Box>
+        
+        <TemplateSelector
+          selectedGenre={state.selectedGenre}
+          onTemplateSelect={handleTemplateSelect}
+          onCreateNew={handleCreateCustom}
+        />
+      </WizardStep>
+    );
+  }
+
   return (
     <WizardStep title="Scenario" onNext={onNext} onBack={onBack}>
+      {/* Template Status and Options */}
+      <Box mb="6">
+        <Flex justify="between" align="center" mb="4">
+          <Box>
+            {selectedTemplate ? (
+              <Flex direction="column" gap="1">
+                <Text size="4" weight="bold" color="cyan">
+                  Using Template: {selectedTemplate.name}
+                </Text>
+                <Text size="3" color="gray">
+                  {selectedTemplate.description}
+                </Text>
+              </Flex>
+            ) : (
+              <Text size="4" color="gray">
+                Creating custom scenario
+              </Text>
+            )}
+          </Box>
+          <Flex gap="2">
+            <Button 
+              onClick={handleUseTemplate} 
+              variant="outline" 
+              size="2"
+            >
+              <MagicWandIcon />
+              Use Template
+            </Button>
+          </Flex>
+        </Flex>
+        
+        {selectedTemplate && (
+          <Card className="p-4 bg-accent-2">
+            <Text size="2" style={{color: "var(--accent-contrast)"}}>
+              <strong>Template Features:</strong> {selectedTemplate.characterRoles.length} character roles, 
+              {selectedTemplate.locationTypes.length} location types
+              {selectedTemplate.tags && `, Tags: ${selectedTemplate.tags.join(', ')}`}
+            </Text>
+          </Card>
+        )}
+      </Box>
       <Flex gap="6" mb="8">
         <Box flexGrow="1">
           <Heading className="lowercase" size="8" color="gold" mb="3">

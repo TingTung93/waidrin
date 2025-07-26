@@ -9,11 +9,13 @@ export default function WizardStep({
   title,
   onNext,
   onBack,
+  nextDisabled,
   children,
 }: {
   title: string;
   onNext?: () => void;
   onBack?: () => void;
+  nextDisabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -26,7 +28,7 @@ export default function WizardStep({
         <Button className="absolute top-1.5 left-0" variant="classic" size="3" onClick={onBack} disabled={!onBack}>
           <GiBroadheadArrow className="rotate-135" size="25" /> <Text size="6">Back</Text>
         </Button>
-        <Button className="absolute top-1.5 right-0" variant="classic" size="3" onClick={onNext} disabled={!onNext}>
+        <Button className="absolute top-1.5 right-0" variant="classic" size="3" onClick={onNext} disabled={!onNext || nextDisabled}>
           <Text size="6">Next</Text> <GiBroadheadArrow className="-rotate-45" size="25" />
         </Button>
 
