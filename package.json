@@ -37,5 +37,23 @@
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "description": "Waidrin is a purpose-built role-playing game engine powered by an LLM.\r It is designed around an asynchronous, fully typed, fully validating state machine\r that uses constrained generation based on JSON schemas to dynamically create\r locations and characters as the story progresses, and keep track of them.\r Waidrin produces structured narrative events, not just chat messages.\r It can handle potentially thousands of characters and locations,\r without ever losing sight of what is happening.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TingTung93/waidrin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TingTung93/waidrin/issues"
+  },
+  "homepage": "https://github.com/TingTung93/waidrin#readme"
 }
