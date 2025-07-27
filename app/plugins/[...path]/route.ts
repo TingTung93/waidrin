@@ -22,7 +22,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       throw new Error(`Attempted path traversal outside of plugins directory: ${filePath}`);
     }
 
-    if (!filePath.endsWith(".js")) {
+    if (!filePath.endsWith(".js") && !filePath.endsWith(".mjs")) {
       throw new Error(`Attempted access of non-JS file in plugins directory: ${filePath}`);
     }
 

@@ -92,7 +92,9 @@ export function AvatarGenerator({ character, onAvatarGenerated, pluginEnabled = 
             biography: character.biography
           },
           style: selectedStyle,
-          customPrompt: customPrompt || undefined
+          customPrompt: customPrompt || undefined,
+          // Access settings from global window object if available
+          settings: (window as any).imageGenerationSettings || undefined
         })
       });
 
@@ -305,7 +307,7 @@ export function AvatarGenerator({ character, onAvatarGenerated, pluginEnabled = 
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
-                    {avatarStyles[avatar.style || "realistic"]}
+                    {avatarStyles[(avatar.style || "realistic") as keyof typeof avatarStyles]}
                   </div>
                 </div>
               ))}
